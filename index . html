@@ -1,0 +1,265 @@
+📁 Project Structure
+chesiro/
+│
+├── backend/
+│   ├── server.js
+│   ├── package.json
+│   ├── config/
+│   │   └── db.js
+│   └── routes/
+│       ├── auth.js
+│       ├── members.js
+│       └── deliveries.js
+│
+├── frontend/
+│   ├── index.html
+│   ├── login.html
+│   ├── dashboard.html
+│   ├── admin.html
+│   ├── css/
+│   │   └── style.css
+│   └── js/
+│       └── app.js
+│
+├── database/
+│   └── schema.sql
+│
+└── README.md
+1️⃣ Database Schema (database/schema.sql)
+CREATE DATABASE chesiro_erp;
+USE chesiro_erp;
+
+CREATE TABLE members (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    member_no VARCHAR(50) UNIQUE,
+    full_name VARCHAR(100),
+    phone VARCHAR(20),
+    email VARCHAR(100),
+    village VARCHAR(100),
+    password VARCHAR(255),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE coffee_deliveries (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    member_id INT,
+    weight_kg DECIMAL(10,2),
+    grade VARCHAR(5),
+    total_value DECIMAL(12,2),
+    delivery_date DATE,
+    FOREIGN KEY (member_id) REFERENCES members(id)
+);
+
+CREATE TABLE admins (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(50),
+    password VARCHAR(255)
+);
+2️⃣ Backend Package (backend/package.json)
+{
+  "name": "chesiro-erp",
+  "version": "1.0.0",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "jsonwebtoken": "^9.0.2",
+    "mysql2": "^3.11.0"
+  }
+}
+3️⃣ Database Connection (backend/config/db.js)
+const mysql = require("mysql2");
+
+const db = mysql.createConnection({
+  host: "localhost",
+  user: "root",
+  password: "",
+  database: "chesiro_erp"
+});
+
+db.connect(err => {
+  if (err) {
+    console.error(err);
+  } else {
+    console.log("Database Connected");
+  }
+});
+
+module.exports = db;
+4️⃣ Main Server (backend/server.js)
+const express = require("express");
+const cors = require("cors");
+
+const app = express();
+
+app.use(cors());
+app.use(express.json());
+
+app.use("/api/auth", require("./routes/auth"));
+app.use("/api/members", require("./routes/members"));
+app.use("/api/deliveries", require("./routes/deliveries"));
+
+const PORT = process.env.PORT || 3000;
+
+app.listen(PORT, () => {
+  console.log(`Server running on ${PORT}`);
+});
+5️⃣ Login Route (backend/routes/auth.js)
+const express = require("express");
+const router = express.Router();
+
+router.post("/login", (req, res) => {
+
+  const { member_no } = req.body;
+
+  res.json({
+    success: true,
+    member_no
+  });
+
+});
+
+module.exports = router;
+6️⃣ Home Page (frontend/index.html)
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Chesiro Farmers' Co-operative Society</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<header>
+    <h1>Chesiro Farmers' Co-operative Society</h1>
+    <h3>Quality Coffee, Strong Farmers, Bright Future</h3>
+</header>
+
+<section>
+    <h2>Welcome</h2>
+
+    <p>
+        Established on 09/09/2011 with 3,168 members.
+    </p>
+
+    <p>
+        Chesiro Factory, P.O. Box 13-50201 Cheptais
+    </p>
+
+    <a href="login.html">
+        <button>Member Login</button>
+    </a>
+</section>
+
+</body>
+</html>
+7️⃣ Login Page (frontend/login.html)
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Member Login</title>
+</head>
+<body>
+
+<h2>Member Login</h2>
+
+<input id="member_no" placeholder="Member Number">
+
+<button onclick="login()">
+Login
+</button>
+
+<script>
+
+async function login(){
+
+ const response = await fetch(
+ "http://localhost:3000/api/auth/login",
+ {
+   method:"POST",
+   headers:{
+     "Content-Type":"application/json"
+   },
+   body:JSON.stringify({
+     member_no:
+     document.getElementById("member_no").value
+   })
+ });
+
+ const data = await response.json();
+
+ if(data.success){
+   localStorage.setItem("member",data.member_no);
+   window.location="dashboard.html";
+ }
+
+}
+
+</script>
+
+</body>
+</html>
+8️⃣ Member Dashboard (frontend/dashboard.html)
+<!DOCTYPE html>
+<html>
+<head>
+<title>Dashboard</title>
+</head>
+<body>
+
+<h2>Member Dashboard</h2>
+
+<p>
+Member Number:
+<span id="member"></span>
+</p>
+
+<script>
+
+document.getElementById("member")
+.innerText =
+localStorage.getItem("member");
+
+</script>
+
+</body>
+</html>
+9️⃣ Basic CSS (frontend/css/style.css)
+body{
+  font-family:Arial;
+  margin:0;
+  padding:0;
+}
+
+header{
+  background:#2e7d32;
+  color:white;
+  padding:20px;
+  text-align:center;
+}
+
+button{
+  background:#2e7d32;
+  color:white;
+  border:none;
+  padding:10px;
+}
+🔟 README.md
+# Chesiro Farmers ERP
+
+Phase 1 MVP
+
+Features:
+- Public Website
+- Member Login
+- Member Dashboard
+- Coffee Delivery Records
+- Admin Dashboard
+- MySQL Database
+- Node.js API
+
+Created for Chesiro Farmers' Co-operative Society.
